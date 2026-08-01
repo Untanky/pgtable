@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 
 	"github.com/untanky/pgtable"
 )
@@ -15,18 +16,18 @@ var ErrInvalidFormat = errors.New("invalid format")
 const columnSeparator = '|'
 
 func Parse(reader io.Reader) (pgtable.Table, error) {
-	bufferedReader := bufio.NewReader(reader)
+	scanner := bufio.NewScanner(reader)
 
-	columns, err := parseColumns(bufferedReader)
+	columns, err := parseColumns(scanner)
 	if err != nil {
 		return pgtable.Table{}, err
 	}
 
-	if err := parseSeparator(bufferedReader); err != nil {
+	if err := parseSeparator(scanner); err != nil {
 		return pgtable.Table{}, err
 	}
 
-	cells, err := parseCells(bufferedReader)
+	cells, err := parseCells(scanner)
 	if err != nil {
 		return pgtable.Table{}, err
 	}
@@ -37,25 +38,22 @@ func Parse(reader io.Reader) (pgtable.Table, error) {
 	}, nil
 }
 
-func readNextLine(reader *bufio.Reader) ([]byte, error) {
-	line, err := reader.ReadBytes('\n')
-	if err != nil {
-		return nil, fmt.Errorf("reading line: %w", err)
+func readNextLine(scanner *bufio.Scanner) ([]byte, error) {
+	ok := scanner.Scan()
+	if !ok {
+		return nil, scanner.Err()
 	}
 
-	line = bytes.TrimSuffix(line, []byte{'\n'})
-
-	return line, nil
+	return scanner.Bytes(), nil
 }
 
-func parseColumns(bufferedReader *bufio.Reader) ([]pgtable.Column, error) {
-	line, err := readNextLine(bufferedReader)
+func parseColumns(scanner *bufio.Scanner) ([]pgtable.Column, error) {
+	line, err := readNextLine(scanner)
 	if err != nil {
 		return nil, err
 	}
 
 	columnBytes := bytes.Split(line, []byte{columnSeparator})
-
 	columns := make([]pgtable.Column, len(columnBytes))
 
 	for idx, column := range columnBytes {
@@ -74,34 +72,28 @@ func parseColumns(bufferedReader *bufio.Reader) ([]pgtable.Column, error) {
 	return columns, nil
 }
 
-func parseSeparator(reader *bufio.Reader) error {
-	_, err := readNextLine(reader)
-	if err == nil {
-		return nil
+func parseSeparator(scanner *bufio.Scanner) error {
+	_, err := readNextLine(scanner)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrInvalidFormat, err)
 	}
 
-	if errors.Is(err, io.EOF) {
-		return ErrInvalidFormat
-	}
-
-	return fmt.Errorf("%w: %w", ErrInvalidFormat, err)
+	return nil
 }
 
-func parseCells(reader *bufio.Reader) ([]pgtable.Cell, error) {
+func parseCells(scanner *bufio.Scanner) ([]pgtable.Cell, error) {
 	cells := make([]pgtable.Cell, 0)
 
+	regex := regexp.MustCompile("\\((\\d) rows?\\)$")
+
 	for {
-		line, err := readNextLine(reader)
+		line, err := readNextLine(scanner)
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				if err := parseFooter(line); err != nil {
-					return nil, err
-				}
-
-				return cells, nil
-			}
-
 			return nil, err
+		}
+
+		if regex.Match(line) {
+			return cells, nil
 		}
 
 		columnBytes := bytes.SplitSeq(line, []byte{columnSeparator})
@@ -119,8 +111,4 @@ func parseCells(reader *bufio.Reader) ([]pgtable.Cell, error) {
 		}
 
 	}
-}
-
-func parseFooter(line []byte) error {
-	return nil
 }
