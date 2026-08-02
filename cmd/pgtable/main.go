@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/untanky/pgtable"
 	"github.com/untanky/pgtable/internal/parser"
 )
 
@@ -14,5 +15,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(table)
+	if err := pgtable.Render(os.Stdout, table); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 }
