@@ -36,13 +36,14 @@ func NewModel(table pgtable.Table) *Model {
 }
 
 func (model *Model) Render() string {
+	rows := model.renderRows().Y(3)
 
 	comp := lipgloss.NewCompositor(
 		model.renderBorder('╭', '┬', '╮'),
 		model.renderHeader().Y(1),
 		model.renderBorder('├', '┼', '┤').Y(2),
-		model.renderRows().Y(3),
-		model.renderBorder('╰', '┴', '╯').Y(4),
+		rows,
+		model.renderBorder('╰', '┴', '╯').Y(rows.Height() + 3),
 	)
 	return comp.Render()
 }
@@ -100,13 +101,15 @@ func (model *Model) renderHeader() *lipgloss.Layer {
 }
 
 func (model *Model) renderRows() *lipgloss.Layer {
-	layers := []*lipgloss.Layer{}
+	compositor := lipgloss.NewCompositor()
+	rowCount := 0
 
 	for i := 0; i < len(model.table.Cells); i += len(model.table.Columns) {
-		layers = append(layers, model.renderRow(model.table.Cells[i:i+len(model.table.Columns)]))
+		row := model.table.Cells[i : i+len(model.table.Columns)]
+		compositor.AddLayers(model.renderRow(row).Y(rowCount))
+		rowCount++
 	}
-
-	return layers[0]
+	return lipgloss.NewLayer(compositor.Render())
 }
 
 func (model *Model) renderRow(row []pgtable.Cell) *lipgloss.Layer {
@@ -127,7 +130,8 @@ func (model *Model) renderRow(row []pgtable.Cell) *lipgloss.Layer {
 			BorderForeground(model.theme.Border).
 			BorderLeft(idx > 0).
 			Width(width).
-			Align(lipgloss.Center)
+			Padding(0, 1).
+			Align(lipgloss.Left)
 
 		if cell.IsNull {
 			cellStyle = cellStyle.Foreground(model.theme.Null)
