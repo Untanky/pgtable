@@ -1,6 +1,7 @@
 package render
 
 import (
+	"image/color"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -12,15 +13,25 @@ type Cursor struct {
 	column int
 }
 
+type Theme struct {
+	Border color.Color
+	Null   color.Color
+}
+
 type Model struct {
 	table  pgtable.Table
 	cursor *Cursor
+	theme  *Theme
 }
 
 func NewModel(table pgtable.Table) *Model {
 	return new(Model{
 		table:  table,
 		cursor: new(Cursor),
+		theme: new(Theme{
+			Border: lipgloss.Color("#6e738d"),
+			Null:   lipgloss.Color("#a5adcb"),
+		}),
 	})
 }
 
@@ -57,7 +68,9 @@ func (model *Model) renderBorder(left, middle, right rune) *lipgloss.Layer {
 		}
 	}
 
-	return lipgloss.NewLayer(builder.String())
+	borderStyle := lipgloss.NewStyle().Foreground(model.theme.Border)
+
+	return lipgloss.NewLayer(borderStyle.Render(builder.String()))
 }
 
 func (model *Model) renderHeader() *lipgloss.Layer {
@@ -71,6 +84,7 @@ func (model *Model) renderHeader() *lipgloss.Layer {
 
 		cellStyle := lipgloss.NewStyle().
 			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(model.theme.Border).
 			BorderLeft(idx > 0).
 			Width(width).
 			Align(lipgloss.Center)
@@ -78,7 +92,9 @@ func (model *Model) renderHeader() *lipgloss.Layer {
 		builder.WriteString(cellStyle.Render(column.Name))
 	}
 
-	rowStyle := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, true)
+	rowStyle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), false, true).
+		BorderForeground(model.theme.Border)
 
 	return lipgloss.NewLayer(rowStyle.Render(builder.String()))
 }
@@ -108,19 +124,22 @@ func (model *Model) renderRow(row []pgtable.Cell) *lipgloss.Layer {
 
 		cellStyle := lipgloss.NewStyle().
 			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(model.theme.Border).
 			BorderLeft(idx > 0).
 			Width(width).
 			Align(lipgloss.Center)
 
 		if cell.IsNull {
-			cellStyle = cellStyle.Foreground(lipgloss.Color("249"))
+			cellStyle = cellStyle.Foreground(model.theme.Null)
 			value = "null"
 		}
 
 		builder.WriteString(cellStyle.Render(value))
 	}
 
-	rowStyle := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, true)
+	rowStyle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), false, true).
+		BorderForeground(model.theme.Border)
 
 	return lipgloss.NewLayer(rowStyle.Render(builder.String()))
 }
