@@ -1,6 +1,7 @@
 package render
 
 import (
+	"fmt"
 	"image/color"
 	"strings"
 
@@ -13,17 +14,26 @@ type Cursor struct {
 	column int
 }
 
+type screen struct {
+	width  int
+	height int
+}
+
 type Theme struct {
 	Border color.Color
 	Null   color.Color
 
 	HighlightBackground color.Color
 	HighlightForeground color.Color
+
+	BottomBarBackground color.Color
+	BottomBarForeground color.Color
 }
 
 type Model struct {
 	table  pgtable.Table
 	cursor *Cursor
+	screen *screen
 	theme  *Theme
 }
 
@@ -31,12 +41,16 @@ func NewModel(table pgtable.Table) *Model {
 	return new(Model{
 		table:  table,
 		cursor: new(Cursor),
+		screen: new(screen),
 		theme: new(Theme{
 			Border: lipgloss.Color("#6e738d"),
 			Null:   lipgloss.Color("#a5adcb"),
 
 			HighlightBackground: lipgloss.Color("#f5a97f"),
 			HighlightForeground: lipgloss.Color("#24273a"),
+
+			BottomBarBackground: lipgloss.Color("#494d64"),
+			BottomBarForeground: lipgloss.Color("#a5adcb"),
 		}),
 	})
 }
@@ -50,6 +64,7 @@ func (model *Model) Render() string {
 		model.renderBorder('├', '┼', '┤').Y(2),
 		rows,
 		model.renderBorder('╰', '┴', '╯').Y(rows.Height()+3),
+		model.renderBottomBar().Y(model.screen.height-1),
 	)
 	return comp.Render()
 }
@@ -161,6 +176,23 @@ func (model *Model) renderRow(rowIdx int, row []pgtable.Cell) *lipgloss.Layer {
 	return lipgloss.NewLayer(rowStyle.Render(builder.String()))
 }
 
+func (model *Model) renderBottomBar() *lipgloss.Layer {
+	bottomBarStyle := lipgloss.NewStyle().
+		Foreground(model.theme.BottomBarForeground).
+		Background(model.theme.BottomBarBackground).
+		Width(model.screen.width)
+
+	bottomContent := fmt.Sprintf("row %d/%d, col %d/%d (%s)",
+		model.cursor.row+1,
+		model.table.RowsCount(),
+		model.cursor.column+1,
+		model.table.ColumnsCount(),
+		model.table.Columns[model.cursor.column].Name,
+	)
+
+	return lipgloss.NewLayer(bottomBarStyle.Render(bottomContent))
+}
+
 func (model *Model) Move(vertical, horizontal int) {
 	nextRow := model.cursor.row + vertical
 	nextRow = max(0, min(model.table.RowsCount()-1, nextRow))
@@ -170,4 +202,9 @@ func (model *Model) Move(vertical, horizontal int) {
 
 	model.cursor.row = nextRow
 	model.cursor.column = nextColumn
+}
+
+func (model *Model) ResizeScreen(width, height int) {
+	model.screen.width = width
+	model.screen.height = height
 }

@@ -22,6 +22,9 @@ func (app App) Init() tea.Cmd {
 func (app App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
+	case tea.WindowSizeMsg:
+		app.tableModel.ResizeScreen(msg.Width, msg.Height)
+
 	// Is it a key press?
 	case tea.KeyPressMsg:
 
