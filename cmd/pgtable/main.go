@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/untanky/pgtable/internal/parser"
+	"github.com/untanky/pgtable/internal/tui"
 	"github.com/untanky/pgtable/render"
 )
 
@@ -16,8 +18,9 @@ func main() {
 	}
 
 	renderer := render.NewModel(table)
+	program := tea.NewProgram(tui.NewApp(*renderer))
 
-	if _, err := os.Stdout.WriteString(renderer.Render()); err != nil {
+	if _, err := program.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
