@@ -15,11 +15,11 @@ func NewApp(tableModel render.Model) *App {
 	})
 }
 
-func (app *App) Init() tea.Cmd {
+func (app App) Init() tea.Cmd {
 	return nil
 }
 
-func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (app App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	// Is it a key press?
@@ -31,13 +31,26 @@ func (app *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// These keys should exit the program.
 		case "ctrl+c", "q":
 			return app, tea.Quit
+
+		case "h", "left":
+			app.tableModel.Move(0, -1)
+			return app, nil
+		case "l", "right":
+			app.tableModel.Move(0, 1)
+			return app, nil
+		case "j", "down":
+			app.tableModel.Move(1, 0)
+			return app, nil
+		case "k", "up":
+			app.tableModel.Move(-1, 0)
+			return app, nil
 		}
 	}
 
 	return app, nil
 }
 
-func (app *App) View() tea.View {
+func (app App) View() tea.View {
 	view := tea.NewView(app.tableModel.Render())
 	view.AltScreen = true
 

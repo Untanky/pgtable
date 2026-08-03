@@ -160,3 +160,14 @@ func (model *Model) renderRow(rowIdx int, row []pgtable.Cell) *lipgloss.Layer {
 
 	return lipgloss.NewLayer(rowStyle.Render(builder.String()))
 }
+
+func (model *Model) Move(vertical, horizontal int) {
+	nextRow := model.cursor.row + vertical
+	nextRow = max(0, min(model.table.RowsCount()-1, nextRow))
+
+	nextColumn := model.cursor.column + horizontal
+	nextColumn = max(0, min(model.table.ColumnsCount()-1, nextColumn))
+
+	model.cursor.row = nextRow
+	model.cursor.column = nextColumn
+}

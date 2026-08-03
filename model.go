@@ -16,3 +16,11 @@ type Table struct {
 	Cells   []Cell
 	RowHint int // parsed from "(N rows)", 0 if absent
 }
+
+func (t Table) ColumnsCount() int {
+	return len(t.Columns)
+}
+
+func (t Table) RowsCount() int {
+	return len(t.Cells) / len(t.Columns)
+}
