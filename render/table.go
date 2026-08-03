@@ -43,7 +43,7 @@ func (model *Model) Render() string {
 		model.renderHeader().Y(1),
 		model.renderBorder('├', '┼', '┤').Y(2),
 		rows,
-		model.renderBorder('╰', '┴', '╯').Y(rows.Height() + 3),
+		model.renderBorder('╰', '┴', '╯').Y(rows.Height()+3),
 	)
 	return comp.Render()
 }
@@ -101,7 +101,7 @@ func (model *Model) renderHeader() *lipgloss.Layer {
 }
 
 func (model *Model) renderRows() *lipgloss.Layer {
-	compositor := lipgloss.NewCompositor()
+	compositor := lipgloss.NewLayer("")
 	rowCount := 0
 
 	for i := 0; i < len(model.table.Cells); i += len(model.table.Columns) {
@@ -109,7 +109,8 @@ func (model *Model) renderRows() *lipgloss.Layer {
 		compositor.AddLayers(model.renderRow(row).Y(rowCount))
 		rowCount++
 	}
-	return lipgloss.NewLayer(compositor.Render())
+
+	return compositor
 }
 
 func (model *Model) renderRow(row []pgtable.Cell) *lipgloss.Layer {
