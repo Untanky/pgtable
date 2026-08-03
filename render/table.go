@@ -16,6 +16,9 @@ type Cursor struct {
 type Theme struct {
 	Border color.Color
 	Null   color.Color
+
+	HighlightBackground color.Color
+	HighlightForeground color.Color
 }
 
 type Model struct {
@@ -31,6 +34,9 @@ func NewModel(table pgtable.Table) *Model {
 		theme: new(Theme{
 			Border: lipgloss.Color("#6e738d"),
 			Null:   lipgloss.Color("#a5adcb"),
+
+			HighlightBackground: lipgloss.Color("#f5a97f"),
+			HighlightForeground: lipgloss.Color("#24273a"),
 		}),
 	})
 }
@@ -106,14 +112,14 @@ func (model *Model) renderRows() *lipgloss.Layer {
 
 	for i := 0; i < len(model.table.Cells); i += len(model.table.Columns) {
 		row := model.table.Cells[i : i+len(model.table.Columns)]
-		compositor.AddLayers(model.renderRow(row).Y(rowCount))
+		compositor.AddLayers(model.renderRow(rowCount, row).Y(rowCount))
 		rowCount++
 	}
 
 	return compositor
 }
 
-func (model *Model) renderRow(row []pgtable.Cell) *lipgloss.Layer {
+func (model *Model) renderRow(rowIdx int, row []pgtable.Cell) *lipgloss.Layer {
 	var builder strings.Builder
 
 	for idx, cell := range row {
@@ -137,6 +143,12 @@ func (model *Model) renderRow(row []pgtable.Cell) *lipgloss.Layer {
 		if cell.IsNull {
 			cellStyle = cellStyle.Foreground(model.theme.Null)
 			value = "null"
+		}
+
+		if model.cursor.row == rowIdx && model.cursor.column == idx {
+			cellStyle = cellStyle.
+				Background(model.theme.HighlightBackground).
+				Foreground(model.theme.HighlightForeground)
 		}
 
 		builder.WriteString(cellStyle.Render(value))
