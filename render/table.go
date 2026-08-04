@@ -250,4 +250,19 @@ func (model *Model) adjustHorizontalOffset() {
 		model.offset.horizontal = cursorLeft
 		return
 	}
+
+	totalWidth := 1
+
+	for _, column := range model.table.Columns {
+		totalWidth += column.Width + 1
+	}
+
+	if totalWidth <= model.screen.width {
+		model.offset.horizontal = 0
+return
+	}
+
+	if model.offset.horizontal+model.screen.width > totalWidth {
+		model.offset.horizontal = totalWidth - model.screen.width
+	}
 }
