@@ -19,6 +19,11 @@ type screen struct {
 	height int
 }
 
+type offset struct {
+	horizontal int
+	vertical   int
+}
+
 type Theme struct {
 	Border color.Color
 	Null   color.Color
@@ -34,6 +39,7 @@ type Model struct {
 	table  pgtable.Table
 	cursor *Cursor
 	screen *screen
+	offset *offset
 	theme  *Theme
 }
 
@@ -42,6 +48,7 @@ func NewModel(table pgtable.Table) *Model {
 		table:  table,
 		cursor: new(Cursor),
 		screen: new(screen),
+		offset: new(offset),
 		theme: new(Theme{
 			Border: lipgloss.Color("#6e738d"),
 			Null:   lipgloss.Color("#a5adcb"),
@@ -58,12 +65,16 @@ func NewModel(table pgtable.Table) *Model {
 func (model *Model) Render() string {
 	rows := model.renderRows().Y(3)
 
-	comp := lipgloss.NewCompositor(
+	tableLayers := lipgloss.NewLayer("").AddLayers(
 		model.renderBorder('╭', '┬', '╮'),
 		model.renderHeader().Y(1),
 		model.renderBorder('├', '┼', '┤').Y(2),
 		rows,
 		model.renderBorder('╰', '┴', '╯').Y(rows.Height()+3),
+	)
+
+	comp := lipgloss.NewCompositor(
+		tableLayers.X(-model.offset.horizontal).Y(model.offset.vertical),
 		model.renderBottomBar().Y(model.screen.height-1),
 	)
 	return comp.Render()
@@ -202,9 +213,41 @@ func (model *Model) Move(vertical, horizontal int) {
 
 	model.cursor.row = nextRow
 	model.cursor.column = nextColumn
+
+	model.adjustHorizontalOffset()
 }
 
 func (model *Model) ResizeScreen(width, height int) {
 	model.screen.width = width
 	model.screen.height = height
+
+	model.adjustHorizontalOffset()
+}
+
+func (model *Model) adjustHorizontalOffset() {
+	var cursorLeft, cursorRight int
+
+	for idx, column := range model.table.Columns {
+		if idx == model.cursor.column {
+			cursorRight = cursorLeft + column.Width + 2
+			break
+		}
+
+		cursorLeft += column.Width + 1
+	}
+
+	if cursorRight-cursorLeft > model.screen.width {
+		model.offset.horizontal = cursorLeft
+		return
+	}
+
+	if cursorRight-model.offset.horizontal > model.screen.width {
+		model.offset.horizontal = cursorRight - model.screen.width
+		return
+	}
+
+	if cursorLeft-model.offset.horizontal < 0 {
+		model.offset.horizontal = cursorLeft
+		return
+	}
 }
