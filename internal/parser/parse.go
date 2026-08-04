@@ -84,7 +84,7 @@ func parseSeparator(scanner *bufio.Scanner) error {
 func parseCells(scanner *bufio.Scanner) ([]pgtable.Cell, error) {
 	cells := make([]pgtable.Cell, 0)
 
-	regex := regexp.MustCompile("\\((\\d) rows?\\)$")
+	regex := regexp.MustCompile("\\((\\d*) rows?\\)$")
 
 	for {
 		line, err := readNextLine(scanner)
