@@ -51,7 +51,6 @@ func NewModel(table pgtable.Table) *Model {
 		offset: new(offset),
 		theme: new(Theme{
 			Border: lipgloss.Color("#6e738d"),
-			Null:   lipgloss.Color("#a5adcb"),
 
 			HighlightBackground: lipgloss.Color("#f5a97f"),
 			HighlightForeground: lipgloss.Color("#24273a"),
@@ -167,7 +166,7 @@ func (model *Model) renderRow(rowIdx int, row []pgtable.Cell) *lipgloss.Layer {
 			Align(lipgloss.Left)
 
 		if cell.IsNull {
-			cellStyle = cellStyle.Foreground(model.theme.Null)
+			cellStyle = cellStyle.Faint(true)
 			value = "null"
 		}
 
