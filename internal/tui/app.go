@@ -47,6 +47,9 @@ func (app App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "k", "up":
 			app.tableModel.Move(-1, 0)
 			return app, nil
+
+		case "y":
+			app.tableModel.Yank()
 		}
 	}
 
