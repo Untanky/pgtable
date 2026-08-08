@@ -74,7 +74,7 @@ func (model *Model) Render() string {
 	)
 
 	comp := lipgloss.NewCompositor(
-		tableLayers.X(-model.offset.horizontal).Y(model.offset.vertical),
+		tableLayers.X(-model.offset.horizontal).Y(-model.offset.vertical),
 		model.renderBottomBar().Y(model.screen.height-1),
 	)
 	return comp.Render()
@@ -214,6 +214,7 @@ func (model *Model) Move(vertical, horizontal int) {
 	model.cursor.row = nextRow
 	model.cursor.column = nextColumn
 
+	model.adjustVerticalOffset()
 	model.adjustHorizontalOffset()
 }
 
@@ -221,7 +222,29 @@ func (model *Model) ResizeScreen(width, height int) {
 	model.screen.width = width
 	model.screen.height = height
 
+	model.adjustVerticalOffset()
 	model.adjustHorizontalOffset()
+}
+
+func (model *Model) adjustVerticalOffset() {
+	screenPosition := model.cursor.row - model.offset.vertical
+	staticOffset := 5
+
+	if screenPosition+staticOffset > model.screen.height {
+		if model.cursor.row+1 == model.table.RowsCount() {
+			staticOffset++
+		}
+
+		model.offset.vertical = model.cursor.row - model.screen.height + staticOffset
+	}
+
+	staticOffset = 3
+	if screenPosition+staticOffset < 0 {
+		if model.cursor.row == 0 {
+			staticOffset = 0
+		}
+		model.offset.vertical = model.cursor.row + staticOffset
+	}
 }
 
 func (model *Model) adjustHorizontalOffset() {
@@ -259,7 +282,7 @@ func (model *Model) adjustHorizontalOffset() {
 
 	if totalWidth <= model.screen.width {
 		model.offset.horizontal = 0
-return
+		return
 	}
 
 	if model.offset.horizontal+model.screen.width > totalWidth {
