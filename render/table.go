@@ -14,9 +14,9 @@ type Cursor struct {
 	column int
 }
 
-type screen struct {
-	width  int
-	height int
+type Screen struct {
+	Width  int
+	Height int
 }
 
 type offset struct {
@@ -38,7 +38,7 @@ type Theme struct {
 type Model struct {
 	table  pgtable.Table
 	cursor *Cursor
-	screen *screen
+	Screen *Screen
 	offset *offset
 	theme  *Theme
 }
@@ -47,7 +47,7 @@ func NewModel(table pgtable.Table) *Model {
 	return new(Model{
 		table:  table,
 		cursor: new(Cursor),
-		screen: new(screen),
+		Screen: new(Screen),
 		offset: new(offset),
 		theme: new(Theme{
 			Border: lipgloss.Color("#6e738d"),
@@ -74,7 +74,7 @@ func (model *Model) Render() string {
 
 	comp := lipgloss.NewCompositor(
 		tableLayers.X(-model.offset.horizontal).Y(-model.offset.vertical),
-		model.renderBottomBar().Y(model.screen.height-1),
+		model.renderBottomBar().Y(model.Screen.Height-1),
 	)
 	return comp.Render()
 }
@@ -190,7 +190,7 @@ func (model *Model) renderBottomBar() *lipgloss.Layer {
 	bottomBarStyle := lipgloss.NewStyle().
 		Foreground(model.theme.BottomBarForeground).
 		Background(model.theme.BottomBarBackground).
-		Width(model.screen.width)
+		Width(model.Screen.Width)
 
 	bottomContent := fmt.Sprintf("row %d/%d, col %d/%d (%s)",
 		model.cursor.row+1,
@@ -218,8 +218,8 @@ func (model *Model) Move(vertical, horizontal int) {
 }
 
 func (model *Model) ResizeScreen(width, height int) {
-	model.screen.width = width
-	model.screen.height = height
+	model.Screen.Width = width
+	model.Screen.Height = height
 
 	model.adjustVerticalOffset()
 	model.adjustHorizontalOffset()
@@ -229,12 +229,12 @@ func (model *Model) adjustVerticalOffset() {
 	screenPosition := model.cursor.row - model.offset.vertical
 	staticOffset := 5
 
-	if screenPosition+staticOffset > model.screen.height {
+	if screenPosition+staticOffset > model.Screen.Height {
 		if model.cursor.row+1 == model.table.RowsCount() {
 			staticOffset++
 		}
 
-		model.offset.vertical = model.cursor.row - model.screen.height + staticOffset
+		model.offset.vertical = model.cursor.row - model.Screen.Height + staticOffset
 	}
 
 	staticOffset = 3
@@ -258,13 +258,13 @@ func (model *Model) adjustHorizontalOffset() {
 		cursorLeft += column.Width + 1
 	}
 
-	if cursorRight-cursorLeft > model.screen.width {
+	if cursorRight-cursorLeft > model.Screen.Width {
 		model.offset.horizontal = cursorLeft
 		return
 	}
 
-	if cursorRight-model.offset.horizontal > model.screen.width {
-		model.offset.horizontal = cursorRight - model.screen.width
+	if cursorRight-model.offset.horizontal > model.Screen.Width {
+		model.offset.horizontal = cursorRight - model.Screen.Width
 		return
 	}
 
@@ -279,12 +279,12 @@ func (model *Model) adjustHorizontalOffset() {
 		totalWidth += column.Width + 1
 	}
 
-	if totalWidth <= model.screen.width {
+	if totalWidth <= model.Screen.Width {
 		model.offset.horizontal = 0
 		return
 	}
 
-	if model.offset.horizontal+model.screen.width > totalWidth {
-		model.offset.horizontal = totalWidth - model.screen.width
+	if model.offset.horizontal+model.Screen.Width > totalWidth {
+		model.offset.horizontal = totalWidth - model.Screen.Width
 	}
 }

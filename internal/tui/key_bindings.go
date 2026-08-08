@@ -47,7 +47,11 @@ func (app App) execute(cmd string, n int) {
 	case "up":
 		app.tableModel.Move(-n, 0)
 	case "down":
-		app.tableModel.Move(n,0)
+		app.tableModel.Move(n, 0)
+	case "up-half-screen":
+		app.tableModel.Move(-app.tableModel.Screen.Height/2, 0)
+	case "down-half-screen":
+		app.tableModel.Move(app.tableModel.Screen.Height/2, 0)
 	case "yank":
 		app.tableModel.Yank()
 	}

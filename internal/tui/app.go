@@ -31,6 +31,8 @@ func NewApp(tableModel render.Model) *App {
 			"k":      "up",
 			"up":     "up",
 			"yy":     "yank",
+			"ctrl+d": "down-half-screen",
+			"ctrl+u": "up-half-screen",
 		},
 		tableModel: tableModel,
 	})
