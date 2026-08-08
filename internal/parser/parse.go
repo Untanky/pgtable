@@ -106,7 +106,7 @@ func parseCells(scanner *bufio.Scanner) ([]pgtable.Cell, error) {
 
 			cells = append(cells, pgtable.Cell{
 				Value:  string(value),
-				IsNull: len(value) == 0,
+				IsNull: string(value) == "[null]",
 			})
 		}
 
