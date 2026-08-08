@@ -5,12 +5,33 @@ import (
 	"github.com/untanky/pgtable/render"
 )
 
+type inputState struct {
+	count   string
+	pending string
+}
+
 type App struct {
+	state      inputState
+	commands   map[string]string
 	tableModel render.Model
 }
 
 func NewApp(tableModel render.Model) *App {
 	return new(App{
+		state: inputState{},
+		commands: map[string]string{
+			"ctrl+c": "quit",
+			"q":      "quit",
+			"h":      "left",
+			"left":   "left",
+			"l":      "right",
+			"right":  "right",
+			"j":      "down",
+			"down":   "down",
+			"k":      "up",
+			"up":     "up",
+			"yy":     "yank",
+		},
 		tableModel: tableModel,
 	})
 }
@@ -35,21 +56,9 @@ func (app App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return app, tea.Quit
 
-		case "h", "left":
-			app.tableModel.Move(0, -1)
+		default:
+			app.state = app.handleKeys(msg)
 			return app, nil
-		case "l", "right":
-			app.tableModel.Move(0, 1)
-			return app, nil
-		case "j", "down":
-			app.tableModel.Move(1, 0)
-			return app, nil
-		case "k", "up":
-			app.tableModel.Move(-1, 0)
-			return app, nil
-
-		case "y":
-			app.tableModel.Yank()
 		}
 	}
 
