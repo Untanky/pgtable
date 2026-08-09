@@ -12,7 +12,6 @@ func displayVersions() {
 	version, goVersion := getVersion()
 
 	fmt.Fprintf(os.Stdin, "Version: %s\nGo Version: %s\n", version, goVersion)
-	os.Exit(0)
 }
 
 func getVersion() (string, string) {
