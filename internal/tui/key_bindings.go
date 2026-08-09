@@ -42,7 +42,7 @@ func (app App) execute(cmd string, n int) {
 	switch cmd {
 	case "left":
 		app.tableModel.Move(0, -n)
-	case "rigth":
+	case "right":
 		app.tableModel.Move(0, n)
 	case "up":
 		app.tableModel.Move(-n, 0)
