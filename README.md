@@ -7,7 +7,7 @@ A modern pager of displaying results of `psql`.
 Install the application with go:
 
 ```sh
-go install github.com/untanky/pgtable/cmd/pgtable@0.1.0
+go install github.com/untanky/pgtable/cmd/pgtable@latest
 ```
 
 To use it as a pager, you need point the `PAGER` variable to the binary. If `$GOBIN` is in your path, adding this to your `.psqlrc` suffices:
